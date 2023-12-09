@@ -1,0 +1,56 @@
+// 声明语法使用protov3
+syntax="proto3";
+
+package idl;
+
+// 转成go语言后对应的package名称; 将来转成go文件后，go文件所在的路径是在什么地方  分号后面是package的名称
+option go_package="./idl/my_proto;student_service";
+
+// 下面生成文件时用的是gogo ，这里不能用google的
+//import "google/protobuf/timestamp.proto";
+
+//import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+
+// 定义request参数和response响应的结构体
+
+message Student {
+  // 响应的结构体
+
+
+  // 编号主要是做序列化和反序列化的，每个字段需要对应一个唯一的编号
+  // 字段类型支持：，支持int32 int64,也支持浮点数float （转成go后是float32） ，列表(repeated type), map
+  string  Name = 1;
+  int32 Age =5;
+  bool Gender = 4;
+  float Height = 7;
+  repeated string Locations = 8;
+  map<string, float> scores = 6;
+//  google.protobuf.Timestamp Birthday = 9;   // 这里引用了第三方的protobuf文件，需要在上面import 导入
+
+
+  // proto中结构体的字段，对应的驼峰形式，就是到时候go里面的变量名
+
+
+}
+
+message Request {
+  // 请求的结构体
+  string StudentId = 1;
+
+}
+
+// 定义完请求 响应的结构体后，需要定义一个接口 RPC远程过程调用中要调用的接口
+
+service  StudentService{
+  rpc GetStudentInfo (Request) returns (Student);
+}
+
+// 步骤：
+// 安装protoc  https://github.com/protocolbuffers/protobuf/releases 添加到path环境变量
+// 安装gogo  在终端执行go install github.com/gogo/protobuf/protoc-gen-gofast@latest  会安装在GOPATH下
+// protoc --go_out=plugins=grpc:. --proto_path=./idl -I=./idl/third_proto student_service.proto
+// 这里用的是gogo ，就把--后的换成gofast_out  :后的. 表示把proto文件转成.go文件后，应该放到哪个目录下 . 表示放到当前目录下。最终的位置是 . + 文件中go_package的目录
+// proto_path 是指定原始的输入文件，即proto文件的位置
+// 后面的-I 参数是，如果proto_path指定的proto文件中，有引用别的proto文件，需要写在-I参数后面(I参数后面写的是import的proto文件的前面的目录)
+
+// 最终的命令是：  protoc --gofast_out=plugins=grpc:. --proto_path=idl -I=idl/third_proto idl/student_service.proto
